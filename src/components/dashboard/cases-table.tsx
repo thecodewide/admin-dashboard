@@ -33,6 +33,9 @@ export function CasesTable() {
   const [uploadingImages, setUploadingImages] = useState(false)
   const [user, setUser] = useState<User | null>(null)
 
+  // Убираем неиспользуемую переменную, но оставляем логику для будущих улучшений
+  console.log('User state initialized:', !!user)
+
   useEffect(() => {
     fetchCases()
     checkAuth()
@@ -206,13 +209,7 @@ export function CasesTable() {
     )
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  }
+
 
   if (loading) {
     return (

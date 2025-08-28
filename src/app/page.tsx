@@ -48,9 +48,9 @@ export default function Dashboard() {
 
         const stats = {
           total: cases.length,
-          active: cases.filter((c: any) => c.status === 'active').length,
-          completed: cases.filter((c: any) => c.status === 'archived').length,
-          visible: cases.filter((c: any) => c.is_visible).length
+          active: cases.filter((c: { status: string }) => c.status === 'active').length,
+          completed: cases.filter((c: { status: string }) => c.status === 'archived').length,
+          visible: cases.filter((c: { is_visible: boolean }) => c.is_visible).length
         }
         setStats(stats)
       }
