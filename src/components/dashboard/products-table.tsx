@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { Product } from '@/types/database'
-import { supabase } from '@/lib/supabase'
+import { createClientComponentClient } from '@/lib/supabase'
 import {
   Table,
   TableBody,
@@ -29,6 +29,7 @@ export function ProductsTable() {
   const fetchProducts = async () => {
     try {
       setLoading(true)
+      const supabase = createClientComponentClient()
       const { data, error } = await supabase
         .from('products')
         .select('*')

@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@/lib/supabase-server'
 
-interface RouteParams {
-  params: {
-    id: string
-  }
-}
-
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const supabase = createRouteHandlerClient()
-    const id = parseInt(params.id)
+    const supabase = await createRouteHandlerClient()
+    const resolvedParams = await params
+    const id = parseInt(resolvedParams.id)
 
     if (isNaN(id)) {
       return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 })
@@ -40,10 +35,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const supabase = createRouteHandlerClient()
-    const id = parseInt(params.id)
+    const supabase = await createRouteHandlerClient()
+    const resolvedParams = await params
+    const id = parseInt(resolvedParams.id)
 
     if (isNaN(id)) {
       return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 })
@@ -76,10 +72,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const supabase = createRouteHandlerClient()
-    const id = parseInt(params.id)
+    const supabase = await createRouteHandlerClient()
+    const resolvedParams = await params
+    const id = parseInt(resolvedParams.id)
 
     if (isNaN(id)) {
       return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 })

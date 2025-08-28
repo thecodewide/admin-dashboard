@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@/lib/supabase-server'
 import { Product } from '@/types/database'
 
 export async function GET(request: NextRequest) {
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
 
-    let query = supabase
+    let query = (await supabase)
       .from('products')
       .select('*', { count: 'exact' })
       .range(offset, offset + limit - 1)
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient()
+    const supabase = await createRouteHandlerClient()
     const body = await request.json()
 
     const { data, error } = await supabase
