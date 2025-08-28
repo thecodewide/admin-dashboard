@@ -1,14 +1,18 @@
 import { CasesTable } from '@/components/dashboard/cases-table'
+import { UserMenu } from '@/components/auth/user-menu'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function Dashboard() {
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Панель управления кейсами</h1>
-        <p className="text-muted-foreground">
-          Управляйте кейсами строительных проектов и отслеживайте портфолио.
-        </p>
+      <div className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Панель управления кейсами</h1>
+          <p className="text-muted-foreground">
+            Управляйте кейсами строительных проектов и отслеживайте портфолио.
+          </p>
+        </div>
+        <UserMenu />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
