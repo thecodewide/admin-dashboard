@@ -91,14 +91,44 @@ export function CasesTable() {
     }
   }
 
-  const removeImage = (indexToRemove: number) => {
+  const removeImage = async (indexToRemove: number) => {
     if (!editingCase) return
 
-    const updatedImages = editingCase.images.filter((_, index) => index !== indexToRemove)
-    setEditingCase({
-      ...editingCase,
-      images: updatedImages
-    })
+    try {
+      const imageUrlToRemove = editingCase.images[indexToRemove]
+
+      // Extract file path from Supabase URL
+      const urlParts = imageUrlToRemove.split('/storage/v1/object/public/images/')
+      if (urlParts.length > 1) {
+        const filePath = urlParts[1]
+
+        console.log('Deleting image from storage:', filePath)
+
+        const response = await fetch(`/api/upload/delete?path=${encodeURIComponent(filePath)}`, {
+          method: 'DELETE',
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          console.error('Failed to delete image from storage:', errorData.error)
+          // Continue with local removal even if storage deletion fails
+        }
+      }
+
+      const updatedImages = editingCase.images.filter((_, index) => index !== indexToRemove)
+      setEditingCase({
+        ...editingCase,
+        images: updatedImages
+      })
+    } catch (error) {
+      console.error('Error removing image:', error)
+      // Still remove from local state even if storage deletion fails
+      const updatedImages = editingCase.images.filter((_, index) => index !== indexToRemove)
+      setEditingCase({
+        ...editingCase,
+        images: updatedImages
+      })
+    }
   }
 
   const deleteCase = async (caseId: number) => {
