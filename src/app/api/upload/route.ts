@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase-server'
+import { createRouteHandlerClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -15,12 +15,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File must be an image' }, { status: 400 })
     }
 
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File size must be less than 5MB' }, { status: 400 })
+    // Check file size (max 2MB for better compatibility)
+    if (file.size > 2 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File size must be less than 2MB' }, { status: 400 })
     }
 
-    const supabase = createAdminClient()
+    const supabase = await createRouteHandlerClient()
 
     // Generate unique filename
     const fileExt = file.name.split('.').pop()
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes)
 
     // Upload file to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('images')
       .upload(filePath, buffer, {
         contentType: file.type,

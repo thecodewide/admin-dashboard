@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-jwt-key-change-in-production'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const cookieStore = await cookies()
     const token = cookieStore.get('auth-token')?.value
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         }
       })
 
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { error: 'Недействительный токен' },
         { status: 401 }
