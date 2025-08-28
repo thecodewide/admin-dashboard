@@ -16,13 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Plus, Edit, Trash2, Eye, EyeOff, Upload, X } from 'lucide-react'
 
@@ -107,24 +101,38 @@ export function CasesTable() {
     })
   }
 
-  const updateCase = async (updatedCase: Case) => {
+  const createOrUpdateCase = async (caseData: Case) => {
     try {
       const supabase = createClientComponentClient()
-      const { error } = await supabase
-        .from('cases')
-        .update(updatedCase)
-        .eq('id', updatedCase.id)
 
-      if (error) {
-        throw error
+      if (caseData.id === 0) {
+        // Create new case
+        const { data, error } = await supabase
+          .from('cases')
+          .insert([{
+            ...caseData,
+            id: undefined // Remove id for insert
+          }])
+          .select()
+          .single()
+
+        if (error) throw error
+      } else {
+        // Update existing case
+        const { error } = await supabase
+          .from('cases')
+          .update(caseData)
+          .eq('id', caseData.id)
+
+        if (error) throw error
       }
 
       // Refresh the cases list
       await fetchCases()
       setEditingCase(null)
     } catch (error) {
-      console.error('Failed to update case:', error)
-      setError('Failed to update case')
+      console.error('Failed to save case:', error)
+      setError('Не удалось сохранить кейс')
     }
   }
 
@@ -161,7 +169,7 @@ export function CasesTable() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="text-muted-foreground">Loading cases...</div>
+        <div className="text-muted-foreground">Загрузка кейсов...</div>
       </div>
     )
   }
@@ -171,7 +179,7 @@ export function CasesTable() {
       <Card>
         <CardContent className="flex items-center justify-center py-8">
           <div className="text-center">
-            <div className="text-red-500 mb-2">Error loading cases</div>
+            <div className="text-red-500 mb-2">Ошибка загрузки кейсов</div>
             <div className="text-sm text-muted-foreground">{error}</div>
             <Button
               variant="outline"
@@ -179,7 +187,7 @@ export function CasesTable() {
               className="mt-4"
               onClick={fetchCases}
             >
-              Try Again
+              Попробовать снова
             </Button>
           </div>
         </CardContent>
@@ -192,10 +200,23 @@ export function CasesTable() {
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <div className="text-center">
-            <div className="text-muted-foreground mb-4">No cases found</div>
-            <Button>
+            <div className="text-muted-foreground mb-4">Кейсы не найдены</div>
+            <Button onClick={() => setEditingCase({
+              id: 0,
+              case_name: '',
+              company_name: '',
+              company_logo: '',
+              case_title: '',
+              description: '',
+              status: 'active',
+              is_visible: true,
+              address: '',
+              object_type: '',
+              images: [],
+              available_at: new Date().toISOString()
+            })}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Case
+              Добавить кейс
             </Button>
           </div>
         </CardContent>
@@ -207,26 +228,39 @@ export function CasesTable() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div className="text-sm text-muted-foreground">
-          Showing {cases.length} cases
+          Показано {cases.length} кейсов
         </div>
-        <Button>
+        <Button onClick={() => setEditingCase({
+          id: 0,
+          case_name: '',
+          company_name: '',
+          company_logo: '',
+          case_title: '',
+          description: '',
+          status: 'active',
+          is_visible: true,
+          address: '',
+          object_type: '',
+          images: [],
+          available_at: new Date().toISOString()
+        })}>
           <Plus className="mr-2 h-4 w-4" />
-          Add Case
+          Добавить кейс
         </Button>
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Company Logo</TableHead>
-            <TableHead>Company</TableHead>
-            <TableHead>Case Title</TableHead>
-            <TableHead>Object Type</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Visibility</TableHead>
-            <TableHead>Address</TableHead>
-            <TableHead>Main Image</TableHead>
-            <TableHead className="w-[100px]">Actions</TableHead>
+            <TableHead>Логотип компании</TableHead>
+            <TableHead>Компания</TableHead>
+            <TableHead>Название кейса</TableHead>
+            <TableHead>Тип объекта</TableHead>
+            <TableHead>Статус</TableHead>
+            <TableHead>Видимость</TableHead>
+            <TableHead>Адрес</TableHead>
+            <TableHead>Основное фото</TableHead>
+            <TableHead className="w-[100px]">Действия</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -252,7 +286,7 @@ export function CasesTable() {
                 <div className="flex items-center">
                   {getVisibilityIcon(caseItem.is_visible)}
                   <span className="ml-2 text-sm">
-                    {caseItem.is_visible ? 'Visible' : 'Hidden'}
+                    {caseItem.is_visible ? 'Виден' : 'Скрыт'}
                   </span>
                 </div>
               </TableCell>
@@ -292,9 +326,9 @@ export function CasesTable() {
       <Dialog open={!!editingCase} onOpenChange={() => setEditingCase(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Case</DialogTitle>
+            <DialogTitle>{editingCase?.id === 0 ? 'Добавить кейс' : 'Редактировать кейс'}</DialogTitle>
             <DialogDescription>
-              Update case information and manage images.
+              {editingCase?.id === 0 ? 'Создайте новый кейс строительного проекта.' : 'Обновите информацию о кейсе и управляйте изображениями.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -303,7 +337,7 @@ export function CasesTable() {
               {/* Basic Information */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Company Name</label>
+                  <label className="block text-sm font-medium mb-2">Название компании</label>
                   <Input
                     value={editingCase.company_name}
                     onChange={(e) => setEditingCase({
@@ -313,7 +347,7 @@ export function CasesTable() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Case Title</label>
+                  <label className="block text-sm font-medium mb-2">Название кейса</label>
                   <Input
                     value={editingCase.case_title}
                     onChange={(e) => setEditingCase({
@@ -325,7 +359,7 @@ export function CasesTable() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
+                <label className="block text-sm font-medium mb-2">Описание</label>
                 <Textarea
                   value={editingCase.description}
                   onChange={(e) => setEditingCase({
@@ -338,7 +372,7 @@ export function CasesTable() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Address</label>
+                  <label className="block text-sm font-medium mb-2">Адрес</label>
                   <Input
                     value={editingCase.address}
                     onChange={(e) => setEditingCase({
@@ -348,20 +382,21 @@ export function CasesTable() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Object Type</label>
+                  <label className="block text-sm font-medium mb-2">Тип объекта</label>
                   <Input
                     value={editingCase.object_type}
                     onChange={(e) => setEditingCase({
                       ...editingCase,
                       object_type: e.target.value
                     })}
+                    placeholder="Апартаменты, Офис, Отель и т.д."
                   />
                 </div>
               </div>
 
               {/* Company Logo */}
               <div>
-                <label className="block text-sm font-medium mb-2">Company Logo URL</label>
+                <label className="block text-sm font-medium mb-2">URL логотипа компании</label>
                 <Input
                   value={editingCase.company_logo}
                   onChange={(e) => setEditingCase({
@@ -374,7 +409,7 @@ export function CasesTable() {
                   <div className="mt-2">
                     <Image
                       src={editingCase.company_logo}
-                      alt="Company logo preview"
+                      alt="Превью логотипа компании"
                       width={60}
                       height={60}
                       className="rounded object-cover"
@@ -386,7 +421,7 @@ export function CasesTable() {
               {/* Images Management */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-medium">Case Images</label>
+                  <label className="block text-sm font-medium">Изображения кейса</label>
                   <div>
                     <Input
                       type="file"
@@ -405,7 +440,7 @@ export function CasesTable() {
                       disabled={uploadingImages}
                     >
                       <Upload className="h-4 w-4 mr-2" />
-                      {uploadingImages ? 'Uploading...' : 'Upload Images'}
+                      {uploadingImages ? 'Загрузка...' : 'Загрузить изображения'}
                     </Button>
                   </div>
                 </div>
@@ -447,7 +482,7 @@ export function CasesTable() {
                   className="rounded"
                 />
                 <label htmlFor="is-visible" className="text-sm font-medium">
-                  Case is visible on website
+                  Кейс виден на сайте
                 </label>
               </div>
 
@@ -457,13 +492,13 @@ export function CasesTable() {
                   variant="outline"
                   onClick={() => setEditingCase(null)}
                 >
-                  Cancel
+                  Отмена
                 </Button>
                 <Button
-                  onClick={() => updateCase(editingCase)}
+                  onClick={() => createOrUpdateCase(editingCase)}
                   disabled={uploadingImages}
                 >
-                  Save Changes
+                  {editingCase.id === 0 ? 'Создать кейс' : 'Сохранить изменения'}
                 </Button>
               </div>
             </div>
