@@ -12,7 +12,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { data, error } = await supabase
-      .from('products')
+      .from('cases')
       .select('*')
       .eq('id', id)
       .single()
@@ -48,7 +48,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const body = await request.json()
 
     const { data, error } = await supabase
-      .from('products')
+      .from('cases')
       .update(body)
       .eq('id', id)
       .select()
@@ -83,7 +83,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     const { error } = await supabase
-      .from('products')
+      .from('cases')
       .delete()
       .eq('id', id)
 

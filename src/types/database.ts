@@ -1,12 +1,17 @@
-export type ProductStatus = 'active' | 'inactive' | 'archived'
+export type CaseStatus = 'active' | 'inactive' | 'archived'
 
-export interface Product {
+export interface Case {
   id: number
-  image_url: string
-  name: string
-  status: ProductStatus
-  price: number
-  stock: number
+  case_name: string
+  company_name: string
+  company_logo: string
+  case_title: string
+  description: string
+  status: CaseStatus
+  is_visible: boolean
+  address: string
+  object_type: string
+  images: string[]
   available_at: string
   created_at?: string
   updated_at?: string
@@ -15,14 +20,14 @@ export interface Product {
 export interface Database {
   public: {
     Tables: {
-      products: {
-        Row: Product
-        Insert: Omit<Product, 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Omit<Product, 'id' | 'created_at' | 'updated_at'>>
+      cases: {
+        Row: Case
+        Insert: Omit<Case, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<Case, 'id' | 'created_at' | 'updated_at'>>
       }
     }
     Enums: {
-      status: ProductStatus
+      status: CaseStatus
     }
   }
 }

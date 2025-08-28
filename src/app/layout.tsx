@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Admin Dashboard",
-  description: "Admin dashboard built with Next.js, Supabase, and Tailwind CSS",
+  title: "Cases Dashboard",
+  description: "Construction cases management dashboard built with Next.js, Supabase, and Tailwind CSS",
 };
 
 export default function RootLayout({
