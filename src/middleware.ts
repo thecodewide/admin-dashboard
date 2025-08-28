@@ -8,12 +8,14 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-jwt-key-change-in-pro
 const publicPaths = [
   '/api/auth/login',
   '/api/auth/logout',
-  '/login'
+  '/api/auth/me',
+  '/login',
+  '/' // Главная страница доступна всем
 ]
 
-// Маршруты API, которые требуют авторизации
+// Маршруты API, которые требуют авторизации для изменения данных
 const protectedApiPaths = [
-  '/api/products',
+  '/api/products', // Только POST, PUT, DELETE операции
   '/api/upload',
   '/api/seed'
 ]
@@ -28,6 +30,12 @@ export function middleware(request: NextRequest) {
 
   // Проверяем авторизацию для защищенных API маршрутов
   if (protectedApiPaths.some(path => pathname.startsWith(path))) {
+    // Для GET запросов разрешаем без авторизации
+    if (request.method === 'GET') {
+      return NextResponse.next()
+    }
+
+    // Получаем токен из cookies
     const token = request.cookies.get('auth-token')?.value
 
     if (!token) {
@@ -48,34 +56,17 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Для всех остальных маршрутов (включая главную страницу) проверяем авторизацию
-  const token = request.cookies.get('auth-token')?.value
-
-  if (!token) {
-    // Перенаправляем на страницу логина
-    const loginUrl = new URL('/login', request.url)
-    return NextResponse.redirect(loginUrl)
-  }
-
-  try {
-    jwt.verify(token, JWT_SECRET)
-    return NextResponse.next()
-  } catch (error) {
-    // Перенаправляем на страницу логина
-    const loginUrl = new URL('/login', request.url)
-    return NextResponse.redirect(loginUrl)
-  }
+  return NextResponse.next()
 }
 
 export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 }

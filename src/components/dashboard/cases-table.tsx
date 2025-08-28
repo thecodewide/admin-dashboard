@@ -20,16 +20,35 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Textarea } from '@/components/ui/textarea'
 import { Plus, Edit, Trash2, Eye, EyeOff, Upload, X } from 'lucide-react'
 
+interface User {
+  username: string
+  role: string
+}
+
 export function CasesTable() {
   const [cases, setCases] = useState<Case[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [editingCase, setEditingCase] = useState<Case | null>(null)
   const [uploadingImages, setUploadingImages] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     fetchCases()
+    checkAuth()
   }, [])
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/me')
+      if (response.ok) {
+        const data = await response.json()
+        setUser(data.user)
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error)
+    }
+  }
 
   const fetchCases = async () => {
     try {
