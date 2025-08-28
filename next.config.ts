@@ -15,12 +15,6 @@ const nextConfig: NextConfig = {
   experimental: {
     serverComponentsExternalPackages: [],
   },
-  // API routes configuration
-  api: {
-    bodyParser: {
-      sizeLimit: '600kb', // Slightly above our 500KB limit
-    },
-  },
 };
 
 export default nextConfig;

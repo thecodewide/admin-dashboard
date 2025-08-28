@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { Case } from '@/types/database'
-import { createClientComponentClient } from '@/lib/supabase'
 import {
   Table,
   TableBody,
