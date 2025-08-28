@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@/lib/supabase-server'
-import { Case } from '@/types/database'
+
 
 export async function GET(request: NextRequest) {
   try {
