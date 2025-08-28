@@ -34,18 +34,17 @@ export function CasesTable() {
   const fetchCases = async () => {
     try {
       setLoading(true)
-      const supabase = createClientComponentClient()
-      const { data, error } = await supabase
-        .from('cases')
-        .select('*')
-        .order('available_at', { ascending: false })
+      const response = await fetch('/api/products')
 
-      if (error) {
-        setError(error.message)
-      } else {
-        setCases(data || [])
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
+
+      const result = await response.json()
+      setCases(result.data || [])
+      setError(null)
     } catch (err) {
+      console.error('Error fetching cases:', err)
       setError('Failed to fetch cases')
     } finally {
       setLoading(false)
@@ -101,38 +100,68 @@ export function CasesTable() {
     })
   }
 
+  const deleteCase = async (caseId: number) => {
+    try {
+      const response = await fetch(`/api/products/${caseId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete case')
+      }
+
+      // Refresh the cases list
+      await fetchCases()
+      setError(null)
+    } catch (error) {
+      console.error('Failed to delete case:', error)
+      setError(error instanceof Error ? error.message : 'Не удалось удалить кейс')
+    }
+  }
+
   const createOrUpdateCase = async (caseData: Case) => {
     try {
-      const supabase = createClientComponentClient()
-
       if (caseData.id === 0) {
         // Create new case
-        const { data, error } = await supabase
-          .from('cases')
-          .insert([{
+        const response = await fetch('/api/products', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             ...caseData,
             id: undefined // Remove id for insert
-          }])
-          .select()
-          .single()
+          }),
+        })
 
-        if (error) throw error
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to create case')
+        }
       } else {
         // Update existing case
-        const { error } = await supabase
-          .from('cases')
-          .update(caseData)
-          .eq('id', caseData.id)
+        const response = await fetch(`/api/products/${caseData.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(caseData),
+        })
 
-        if (error) throw error
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to update case')
+        }
       }
 
       // Refresh the cases list
       await fetchCases()
       setEditingCase(null)
+      setError(null)
     } catch (error) {
       console.error('Failed to save case:', error)
-      setError('Не удалось сохранить кейс')
+      setError(error instanceof Error ? error.message : 'Не удалось сохранить кейс')
     }
   }
 
@@ -312,7 +341,15 @@ export function CasesTable() {
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      if (confirm('Вы уверены, что хотите удалить этот кейс?')) {
+                        deleteCase(caseItem.id)
+                      }
+                    }}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

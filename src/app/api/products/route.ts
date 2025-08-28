@@ -4,14 +4,14 @@ import { createRouteHandlerClient } from '@/lib/supabase-server'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient()
+    const supabase = await createRouteHandlerClient()
     const { searchParams } = new URL(request.url)
 
     const status = searchParams.get('status')
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
 
-    let query = (await supabase)
+    let query = supabase
       .from('cases')
       .select('*', { count: 'exact' })
       .range(offset, offset + limit - 1)
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const { data, error, count } = await query
 
     if (error) {
-      console.error('Error fetching products:', error)
+      console.error('Error fetching cases:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
