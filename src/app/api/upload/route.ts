@@ -5,6 +5,15 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Upload API called')
 
+    // Check content type
+    const contentType = request.headers.get('content-type')
+    console.log('Content-Type:', contentType)
+
+    if (!contentType?.includes('multipart/form-data')) {
+      console.log('Invalid content type')
+      return NextResponse.json({ error: 'Content-Type must be multipart/form-data' }, { status: 400 })
+    }
+
     const formData = await request.formData()
     const file = formData.get('file') as File
 
@@ -21,10 +30,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File must be an image' }, { status: 400 })
     }
 
-    // Check file size (max 2MB for better compatibility)
-    if (file.size > 2 * 1024 * 1024) {
-      console.log('File too large:', file.size)
-      return NextResponse.json({ error: 'File size must be less than 2MB' }, { status: 400 })
+    // Check file size (max 500KB for Vercel compatibility)
+    const maxSize = 500 * 1024 // 500KB
+    if (file.size > maxSize) {
+      console.log('File too large:', file.size, 'Max allowed:', maxSize)
+      return NextResponse.json({
+        error: `File size must be less than ${maxSize / 1024}KB. Your file is ${(file.size / 1024).toFixed(1)}KB`
+      }, { status: 400 })
     }
 
     const supabase = createAdminClient()
@@ -74,9 +86,20 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Unexpected error in upload API:', error)
-    return NextResponse.json(
-      { error: `Internal server error: ${error instanceof Error ? error.message : 'Unknown error'}` },
+
+    // Ensure we always return valid JSON
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const response = NextResponse.json(
+      {
+        error: `Internal server error: ${errorMessage}`,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     )
+
+    // Ensure proper headers
+    response.headers.set('Content-Type', 'application/json')
+
+    return response
   }
 }

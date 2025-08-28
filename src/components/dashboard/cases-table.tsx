@@ -52,21 +52,58 @@ export function CasesTable() {
   }
 
   const uploadImage = async (file: File): Promise<string> => {
+    // Client-side validation
+    const maxSize = 500 * 1024 // 500KB
+    if (file.size > maxSize) {
+      throw new Error(`Файл слишком большой. Максимальный размер: ${maxSize / 1024}KB. Ваш файл: ${(file.size / 1024).toFixed(1)}KB`)
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Файл должен быть изображением (JPEG, PNG, GIF, WebP и т.д.)')
+    }
+
     const formData = new FormData()
     formData.append('file', file)
+
+    console.log('Uploading file:', file.name, file.size, file.type)
 
     const response = await fetch('/api/upload', {
       method: 'POST',
       body: formData,
     })
 
+    console.log('Upload response status:', response.status)
+
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.error || 'Failed to upload image')
+      let errorMessage = `Ошибка загрузки: ${response.status}`
+
+      try {
+        const contentType = response.headers.get('content-type')
+        if (contentType?.includes('application/json')) {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } else {
+          const textResponse = await response.text()
+          console.error('Non-JSON response:', textResponse)
+          errorMessage = `Ошибка сервера: ${response.status} ${response.statusText}`
+        }
+      } catch (parseError) {
+        console.error('Failed to parse error response:', parseError)
+        errorMessage = `Ошибка сервера: ${response.status} ${response.statusText}`
+      }
+
+      throw new Error(errorMessage)
     }
 
-    const data = await response.json()
-    return data.url
+    try {
+      const data = await response.json()
+      console.log('Upload successful:', data)
+      return data.url
+    } catch (parseError) {
+      console.error('Failed to parse success response:', parseError)
+      throw new Error('Не удалось обработать ответ сервера')
+    }
   }
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,7 +122,8 @@ export function CasesTable() {
       })
     } catch (error) {
       console.error('Failed to upload images:', error)
-      setError('Failed to upload images')
+      const errorMessage = error instanceof Error ? error.message : 'Не удалось загрузить изображения'
+      setError(errorMessage)
     } finally {
       setUploadingImages(false)
     }
